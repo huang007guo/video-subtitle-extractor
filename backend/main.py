@@ -8,11 +8,10 @@
 import re
 import os
 import random
-import shutil
 from collections import Counter
 import unicodedata
 from threading import Thread
-from pathlib import Path
+
 import cv2
 from Levenshtein import ratio
 from PIL import Image
@@ -26,8 +25,9 @@ from tools.reformat_en import reformat
 from tools.infer import utility
 from tools.infer.predict_det import TextDetector
 from tools.infer.predict_system import TextSystem
-import threading
 import platform
+import uuid
+import shutil
 
 
 # 加载文本检测+识别模型
@@ -37,76 +37,9 @@ class OcrRecogniser:
         self.args = utility.parse_args()
         self.recogniser = self.init_model()
 
-    @staticmethod
-    def y_round(y):
-        y_min = y + 10 - y % 10
-        y_max = y - y % 10
-        if abs(y - y_min) < abs(y - y_max):
-            return y_min
-        else:
-            return y_max
-
     def predict(self, image):
         detection_box, recognise_result = self.recogniser(image)
-        if len(detection_box) > 0:
-            coordinate_list = list()
-            if isinstance(detection_box, list):
-                for i in detection_box:
-                    i = list(i)
-                    (x1, y1) = int(i[0][0]), int(i[0][1])
-                    (x2, y2) = int(i[1][0]), int(i[1][1])
-                    (x3, y3) = int(i[2][0]), int(i[2][1])
-                    (x4, y4) = int(i[3][0]), int(i[3][1])
-                    xmin = max(x1, x4)
-                    xmax = min(x2, x3)
-                    ymin = max(y1, y2)
-                    ymax = min(y3, y4)
-                    coordinate_list.append([xmin, xmax, ymin, ymax])
-
-            # 计算有多少行字幕，将每行字幕最小的ymin值放入lines
-            lines = []
-            for i in coordinate_list:
-                if len(lines) < 1:
-                    lines.append(self.y_round(i[2]))
-                else:
-                    if self.y_round(i[2]) not in lines \
-                            and self.y_round(i[2]) + 10 not in lines \
-                            and self.y_round(i[2]) - 10 not in lines:
-                        lines.append(self.y_round(i[2]))
-            lines = sorted(lines)
-
-            for i in coordinate_list:
-                for j in lines:
-                    if abs(j - self.y_round(i[2])) <= 10:
-                        i[2] = j
-
-            to_rank_res = list(zip(coordinate_list, recognise_result))
-            ranked_res = []
-            for line in lines:
-                tmp_list = []
-                for i in to_rank_res:
-                    if i[0][2] == line:
-                        tmp_list.append(i)
-                # 先根据纵坐标排序
-                for k in range(1, len(tmp_list)):
-                    for j in range(0, len(tmp_list) - k):
-                        if tmp_list[j][0][2] > tmp_list[j + 1][0][2]:
-                            print(tmp_list[j][0][2])
-                            tmp_list[j], tmp_list[j + 1] = tmp_list[j + 1], tmp_list[j]
-                # 再根据横坐标排列
-                for l in range(1, len(tmp_list)):
-                    for j in range(0, len(tmp_list) - l):
-                        if tmp_list[j][0][0] > tmp_list[j + 1][0][0]:
-                            tmp_list[j], tmp_list[j + 1] = tmp_list[j + 1], tmp_list[j]
-                for m in tmp_list:
-                    ranked_res.append(m)
-            dt_box = []
-            for i in [j[0] for j in ranked_res]:
-                dt_box.append([(i[0], i[2]), (i[1], i[2]), (i[1], i[3]), (i[0], i[3])])
-            res = [i[1] for i in ranked_res]
-            return dt_box, res
-        else:
-            return detection_box, recognise_result
+        return detection_box, recognise_result
 
     def init_model(self):
         self.args.use_gpu = config.USE_GPU
@@ -123,10 +56,7 @@ class OcrRecogniser:
         # 设置字典路径
         self.args.rec_char_dict_path = config.DICT_PATH
         # 设置识别文本的类型
-        if config.REC_CHAR_TYPE == 'en':
-            self.args.rec_char_type = 'ch'
-        else:
-            self.args.rec_char_type = config.REC_CHAR_TYPE
+        self.args.rec_char_type = config.REC_CHAR_TYPE
         return TextSystem(self.args)
 
 
@@ -149,17 +79,15 @@ class SubtitleExtractor:
     """
 
     def __init__(self, vd_path, sub_area=None):
-        # 线程锁
-        self.lock = threading.RLock()
         # 字幕区域位置
         self.sub_area = sub_area
         self.sub_detector = SubtitleDetect()
+        # 临时存储文件夹
+        uid = uuid.uuid1()
+        self.temp_output_dir = os.path.join(os.path.dirname(config.BASE_DIR), 'output'+uid.hex)
         # 视频路径
         self.video_path = vd_path
         self.video_cap = cv2.VideoCapture(vd_path)
-        # 临时存储文件夹
-        self.vd_name = Path(self.video_path).stem
-        self.temp_output_dir = os.path.join(os.path.dirname(config.BASE_DIR), 'output', str(self.vd_name))
         # 视频帧总数
         self.frame_count = self.video_cap.get(cv2.CAP_PROP_FRAME_COUNT)
         # 视频帧率
@@ -169,6 +97,7 @@ class SubtitleExtractor:
         self.frame_width = int(self.video_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         # 字幕出现区域
         self.subtitle_area = config.SUBTITLE_AREA
+        print(f"{interface_config['Main']['FrameCount']}：{self.frame_count}，{interface_config['Main']['FrameRate']}：{self.fps}")
         # 提取的视频帧储存目录
         self.frame_output_dir = os.path.join(self.temp_output_dir, 'frames')
         # 提取的字幕文件存储目录
@@ -186,15 +115,11 @@ class SubtitleExtractor:
         self.ocr = OcrRecogniser()
         # 处理进度
         self.progress = 0
-        # 是否完成
-        self.isFinished = False
 
     def run(self):
         """
         运行整个提取视频的步骤
         """
-        self.lock.acquire()
-        print(f"{interface_config['Main']['FrameCount']}：{self.frame_count}，{interface_config['Main']['FrameRate']}：{self.fps}")
         print(interface_config['Main']['StartProcessFrame'])
         if self.sub_area is not None:
             # 如果开启精准模式
@@ -251,10 +176,8 @@ class SubtitleExtractor:
             reformat(os.path.join(os.path.splitext(self.video_path)[0] + '.srt'))
         print(interface_config['Main']['FinishGenerateSub'])
         self.progress = 100
-        self.isFinished = True
-        # 删除缓存文件
-        self.empty_cache()
-        self.lock.release()
+        # hank 删除临时目录
+        shutil.rmtree(self.temp_output_dir)
 
     def extract_frame(self):
         """
@@ -425,12 +348,12 @@ class SubtitleExtractor:
         # re：图像右半部分所占百分比，取值【0-1】
         right_end = self.sub_area[3] / self.frame_width
         # 定义执行命令
-        cmd = f"{path_vsf} -c -r -i \"{self.video_path}\" -o \"{self.temp_output_dir}\" -ces \"{self.vsf_subtitle}\" "
-        cmd += f"-te {top_end} -be {bottom_end} -le {left_end} -re {right_end}"
+        cmd = path_vsf + " -c -r" + " -i \"" + self.video_path + "\" -o " + self.temp_output_dir + f' -ces {self.vsf_subtitle}' + f' -te {top_end}' + f' -be {bottom_end}' + f' -le {left_end}' + f' -re {right_end}'
         # 计算进度
         Thread(target=count_process, daemon=True).start()
         import subprocess
-        subprocess.run(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        res = subprocess.run(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
         # 提取字幕帧
         cap = cv2.VideoCapture(self.video_path)
         for i, frame_name in enumerate(os.listdir(os.path.join(self.temp_output_dir, 'RGBImages'))):
@@ -495,11 +418,7 @@ class SubtitleExtractor:
             # 获取文本坐标
             coordinates = self.__get_coordinates(dt_box)
             # 将结果写入txt文本中
-            if config.REC_CHAR_TYPE == 'en':
-                # 如果识别语言为英文，则去除中文
-                text_res = [(re.sub('[\u4e00-\u9fa5]', '', res[0]), res[1]) for res in rec_res]
-            else:
-                text_res = [(res[0], res[1]) for res in rec_res]
+            text_res = [(res[0], res[1]) for res in rec_res]
             # 进度条
             self.progress = i / len(frame_list) * 100
             for content, coordinate in zip(text_res, coordinates):
@@ -1053,24 +972,13 @@ class SubtitleExtractor:
             for i in os.listdir(self.frame_output_dir):
                 os.remove(os.path.join(self.frame_output_dir, i))
 
-    def empty_cache(self):
-        """
-        删除字幕提取过程中所有生产的缓存文件
-        """
-        if os.path.exists(self.temp_output_dir):
-            shutil.rmtree(self.temp_output_dir, True)
-
 
 if __name__ == '__main__':
     # 提示用户输入视频路径
     video_path = input(f"{interface_config['Main']['InputVideo']}").strip()
     # 提示用户输入字幕区域
-    try:
-        y_min, y_max, x_min, x_max = map(int, input(f"{interface_config['Main']['ChooseSubArea']} (ymin ymax xmin "
-                                                 f"xmax)：").split())
-        subtitle_area = (y_min, y_max, x_min, x_max)
-    except ValueError as e:
-        subtitle_area = None
+    ymin, ymax, xmin, xmax = map(int, input(f"{interface_config['Main']['ChooseSubArea']} (ymin ymax xmin xmax)：").split())
+    subtitle_area = (ymin, ymax, xmin, xmax)
     # 新建字幕提取对象
     se = SubtitleExtractor(video_path, subtitle_area)
     # 开始提取字幕
