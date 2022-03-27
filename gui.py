@@ -8,8 +8,8 @@
 import warnings
 warnings.filterwarnings("ignore", category=Warning)
 warnings.filterwarnings("ignore", category=DeprecationWarning)
-import sys
 import os
+import sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dependencies'))
 import configparser
 import PySimpleGUI as sg
@@ -86,35 +86,19 @@ class SubtitleExtractorGUI:
             # 更新进度条
             if self.se is not None:
                 self.window['-PROG-'].update(self.se.progress)
-                if self.se.isFinished:
-                    # 1) 打开修改字幕滑块区域按钮
-                    self.window['-Y-SLIDER-'].update(disabled=False)
-                    self.window['-X-SLIDER-'].update(disabled=False)
-                    self.window['-Y-SLIDER-H-'].update(disabled=False)
-                    self.window['-X-SLIDER-W-'].update(disabled=False)
-                    # 2) 打开【运行】、【打开】和【识别语言】按钮
-                    self.window['-RUN-'].update(disabled=False)
-                    self.window['-FILE-'].update(disabled=False)
-                    self.window['-FILE_BTN-'].update(disabled=False)
-                    self.window['-LANGUAGE-MODE-'].update(disabled=False)
-
 
     def _create_layout(self):
         """
         创建字幕提取器布局
         """
-        garbage = os.path.join(os.path.dirname(__file__), 'output')
-        if os.path.exists(garbage):
-            import shutil
-            shutil.rmtree(garbage, True)
         self.layout = [
             # 显示视频预览
             [sg.Image(size=(self.video_preview_width, self.video_preview_height), background_color='black',
                       key='-DISPLAY-')],
             # 打开按钮 + 快进快退条
             [sg.Input(key='-FILE-', visible=False, enable_events=True),
-             sg.FilesBrowse(self.interface_config['SubtitleExtractorGUI']['Open'], file_types=((
-                            self.interface_config['SubtitleExtractorGUI']['AllFile'], '*.*'), ('mp4', '*.mp4'),
+             sg.FileBrowse(self.interface_config['SubtitleExtractorGUI']['Open'], file_types=((
+                           self.interface_config['SubtitleExtractorGUI']['AllFile'], '*.*'), ('mp4', '*.mp4'),
                                                                                               ('flv', '*.flv'),
                                                                                               ('wmv', '*.wmv'),
                                                                                               ('avi', '*.avi')),
@@ -162,8 +146,7 @@ class SubtitleExtractorGUI:
         2）获取视频信息，初始化进度条滑块范围
         """
         if event == '-FILE-':
-            self.video_paths = values['-FILE-'].split(';')
-            self.video_path = self.video_paths[0]
+            self.video_path = values['-FILE-']
             if self.video_path != '':
                 self.video_cap = cv2.VideoCapture(self.video_path)
             if self.video_cap is None:
@@ -171,8 +154,7 @@ class SubtitleExtractorGUI:
             if self.video_cap.isOpened():
                 ret, frame = self.video_cap.read()
                 if ret:
-                    for video in self.video_paths:
-                        print(f"{self.interface_config['SubtitleExtractorGUI']['OpenVideoSuccess']}：{video}")
+                    print(f"{self.interface_config['SubtitleExtractorGUI']['OpenVideoSuccess']}：{self.video_path}")
                     # 获取视频的帧数
                     self.frame_count = self.video_cap.get(cv2.CAP_PROP_FRAME_COUNT)
                     # 获取视频的高度
@@ -191,12 +173,14 @@ class SubtitleExtractorGUI:
                     # 更新视频字幕位置滑块range
                     self.window['-Y-SLIDER-'].update(range=(0, self.frame_height), disabled=False)
                     self.window['-Y-SLIDER-H-'].update(range=(0, self.frame_height // 2), disabled=False)
-                    self.window['-Y-SLIDER-'].update(self.frame_height * .85)
-                    self.window['-Y-SLIDER-H-'].update(self.frame_height * .146)
+                    # hank 默认的字幕位置Y轴
+                    self.window['-Y-SLIDER-'].update(self.frame_height * .83)
+                    self.window['-Y-SLIDER-H-'].update(self.frame_height * .17)
                     self.window['-X-SLIDER-'].update(range=(0, self.frame_width), disabled=False)
                     self.window['-X-SLIDER-W-'].update(range=(0, self.frame_width), disabled=False)
-                    self.window['-X-SLIDER-'].update(self.frame_width * .15)
-                    self.window['-X-SLIDER-W-'].update(self.frame_width * .7)
+                    # hank 默认的字幕位置X轴
+                    self.window['-X-SLIDER-'].update(self.frame_width * .05)
+                    self.window['-X-SLIDER-W-'].update(self.frame_width * .9)
 
     @staticmethod
     def _language_mode_event_handler(event):
@@ -233,11 +217,11 @@ class SubtitleExtractorGUI:
                 self.ymin = int(values['-Y-SLIDER-'])
                 self.ymax = int(values['-Y-SLIDER-'] + values['-Y-SLIDER-H-'])
                 print(f"{self.interface_config['SubtitleExtractorGUI']['SubtitleArea']}：({self.ymin},{self.ymax},{self.xmin},{self.xmax})")
+                # hank 提取的参数和代码
                 subtitle_area = (self.ymin, self.ymax, self.xmin, self.xmax)
                 from backend.main import SubtitleExtractor
-                for video_path in self.video_paths:
-                    self.se = SubtitleExtractor(video_path, subtitle_area)
-                    Thread(target=self.se.run, daemon=True).start()
+                self.se = SubtitleExtractor(self.video_path, subtitle_area)
+                Thread(target=self.se.run, daemon=True).start()
 
     def _slide_event_handler(self, event, values):
         """
@@ -443,7 +427,7 @@ class LanguageModeGUI:
         return interface_def, language_def, mode_def
 
 
-if __name__ == '__main__':
+if 'qpt':
     # 运行图形化界面
     subtitleExtractorGUI = SubtitleExtractorGUI()
     subtitleExtractorGUI.run()
