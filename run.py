@@ -40,7 +40,7 @@ def filterFileFun(fileName, *suffix):
         print(e)
     return False
 
-def main(source_path, shutdown, onceNum, progress):
+def main(source_path, shutdown, onceNum):
     """
     运行字幕提取的命令行模式
     """
