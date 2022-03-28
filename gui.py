@@ -139,7 +139,7 @@ class SubtitleExtractorGUI:
              ],
             # cmd运行输入区域
             [sg.Text("扫描的目录或文件,支持多个用','分割:"), sg.Input(key="-SOURCE-PATH-", default_text=None)],
-            [sg.Text("一次执行(并发)的个数:"), sg.Spin([i for i in range(1, 11)], key="-ONCE-NUM-", initial_value=2)],
+            [sg.Text("一次执行(并发)的个数:"), sg.Spin([i for i in range(1, 11)], key="-ONCE-NUM-", initial_value=3)],
             [sg.Checkbox("是否自动关机", key="-IS-SHUTDOWN-")],
             # 运行cmd按钮
             [sg.Button(button_text="运行cmd提取", key='-RUN-CMD-', size=(20, 1))],
