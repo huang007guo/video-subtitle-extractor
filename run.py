@@ -111,17 +111,21 @@ def main(source_path, shutdown, onceNum):
                     # })
             nowProcess.start()
             nowProcessAll.append(nowProcess)
-            i = i+1
-            j = j+1
-            if i == concurrencyNum or j == len(allFile):
-                i = 0
-                for nowProcess in nowProcessAll:
-                    try:
-                        nowProcess.join()
-                    except BaseException as e:
-                        print(e)
-                print(f"----------------Ok----------------------")
-                nowProcessAll = []
+            while len(nowProcessAll) >= concurrencyNum:
+                for process in nowProcessAll:
+                    if not process.is_alive():
+                        nowProcessAll.remove(process)
+            # i = i+1
+            # j = j+1
+            # if i == concurrencyNum or j == len(allFile):
+            #     i = 0
+            #     for nowProcess in nowProcessAll:
+            #         try:
+            #             nowProcess.join()
+            #         except BaseException as e:
+            #             print(e)
+            #     print(f"----------------Ok----------------------")
+            #     nowProcessAll = []
         print(f"all Ok")
     except BaseException as e:
         print(traceback.print_exc())
