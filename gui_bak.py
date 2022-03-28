@@ -137,12 +137,6 @@ class SubtitleExtractorGUI:
                        size=(20, 1)),
              sg.ProgressBar(100, orientation='h', size=(44, 20), key='-PROG-')
              ],
-            # cmd运行输入区域
-            [sg.Text("扫描的目录或文件,支持多个用','分割:"), sg.Input(key="-SOURCE-PATH-", default_text=None)],
-            [sg.Text("一次执行(并发)的个数:"), sg.Spin([i for i in range(1, 11)], key="-ONCE-NUM-", initial_value=2)],
-            [sg.Checkbox("是否自动关机", key="-IS-SHUTDOWN-")],
-            # 运行cmd按钮
-            [sg.Button(button_text="运行cmd提取", key='-RUN-CMD-', size=(20, 1))],
         ]
 
     def _file_event_handler(self, event, values):
@@ -228,25 +222,7 @@ class SubtitleExtractorGUI:
                 from backend.main import SubtitleExtractor
                 self.se = SubtitleExtractor(self.video_path, subtitle_area)
                 Thread(target=self.se.run, daemon=True).start()
-        # 运行cmd的提取
-        if event == '-RUN-CMD-':
-            source_path = values['-SOURCE-PATH-']
-            print(source_path)
-            if source_path is None or source_path == '':
-                print("请输入提取目录或文件")
-            else:
-                # 1) 禁止修改字幕滑块区域
-                self.window['-Y-SLIDER-'].update(disabled=True)
-                self.window['-X-SLIDER-'].update(disabled=True)
-                self.window['-Y-SLIDER-H-'].update(disabled=True)
-                self.window['-X-SLIDER-W-'].update(disabled=True)
-                # 2) 禁止再次点击【运行】、【打开】和【识别语言】按钮
-                self.window['-RUN-'].update(disabled=True)
-                self.window['-FILE-'].update(disabled=True)
-                self.window['-FILE_BTN-'].update(disabled=True)
-                self.window['-LANGUAGE-MODE-'].update(disabled=True)
-                import run
-                Thread(target=run.main, daemon=True, args=[source_path, values['-IS-SHUTDOWN-'], values['-ONCE-NUM-']]).start()
+
     def _slide_event_handler(self, event, values):
         """
         当滑动视频进度条/滑动字幕选择区域滑块时：
