@@ -233,7 +233,7 @@ class SubtitleExtractorGUI:
             source_path = values['-SOURCE-PATH-']
             print(source_path)
             if source_path is None or source_path == '':
-                print("请输入提取目录或文件")
+                print(f"请输入提取目录或文件")
             else:
                 # 1) 禁止修改字幕滑块区域
                 self.window['-Y-SLIDER-'].update(disabled=True)

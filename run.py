@@ -72,16 +72,16 @@ def main(source_path, shutdown, onceNum):
 
         # 字幕区域参数
         for nowFile in allFile:
-            print("now file:" + nowFile)
+            print(f"now file:{nowFile}")
             video_cap = cv2.VideoCapture(nowFile)
             if video_cap is None:
-                print(nowFile+"读取失败")
+                print(f"{nowFile} 读取失败")
                 continue
             if not video_cap.isOpened():
-                print(nowFile+"打开失败")
+                print(f"{nowFile} 打开失败")
                 continue
             if os.path.exists(os.path.join(os.path.splitext(nowFile)[0] + '.srt')):
-                print(nowFile+"已存在字幕")
+                print(f"{nowFile} 已存在字幕")
                 continue
             # 获取视频的高度
             frame_height = video_cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
@@ -120,16 +120,16 @@ def main(source_path, shutdown, onceNum):
                         nowProcess.join()
                     except BaseException as e:
                         print(e)
-                print("----------------Ok----------------------")
+                print(f"----------------Ok----------------------")
                 nowProcessAll = []
-        print("all Ok")
+        print(f"all Ok")
     except BaseException as e:
         print(traceback.print_exc())
         return 1
     finally:
         # 自动关机
         if shutdown:
-            print('60s after shutdown pc')
+            print(f"60s after shutdown pc")
             os.system('shutdown -s -t 60')
     
     return 0
