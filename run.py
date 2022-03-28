@@ -2,7 +2,7 @@
 #!/usr/bin/env python
 
 """
-D:\soft\vse_windows_GPU\vse\Python\python.exe .\run.py "E:\system\待下载\[桜都字幕组][ばにぃうぉ～か～]OVA大好きな母 ＃2 大好きな母の裏側"
+D:\soft\vse_windows_GPU\vse\Python\python.exe .\run.py "E:\system\待下载\"
 嵌套字幕提取的命令行运行
 @Author  : hank 
 """
@@ -10,6 +10,7 @@ D:\soft\vse_windows_GPU\vse\Python\python.exe .\run.py "E:\system\待下载\[桜
 import argparse
 import os
 import sys
+import time
 # 提取模块
 from backend.main import SubtitleExtractor
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dependencies'))
@@ -112,6 +113,7 @@ def main(source_path, shutdown, onceNum):
             nowProcess.start()
             nowProcessAll.append(nowProcess)
             while len(nowProcessAll) >= concurrencyNum:
+                time.sleep(10)
                 for process in nowProcessAll:
                     if not process.is_alive():
                         nowProcessAll.remove(process)

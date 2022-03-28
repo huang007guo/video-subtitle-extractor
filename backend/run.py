@@ -2,7 +2,7 @@
 #!/usr/bin/env python
 
 """
-D:\soft\vse_windows_GPU\vse\Python\python.exe .\run.py "E:\system\待下载\[桜都字幕组][ばにぃうぉ～か～]OVA大好きな母 ＃2 大好きな母の裏側"
+D:\soft\vse_windows_GPU\vse\Python\python.exe .\run.py "E:\system\待下载"
 嵌套字幕提取的命令行运行
 @Author  : hank 
 """
