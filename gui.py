@@ -15,6 +15,7 @@ import configparser
 import PySimpleGUI as sg
 import cv2
 from threading import Thread
+from queue import Queue
 
 
 class SubtitleExtractorGUI:
@@ -63,6 +64,7 @@ class SubtitleExtractorGUI:
         self.ymax = None
         # 字幕提取器
         self.se = None
+        self.queue = Queue(maxsize=1)
 
     def run(self):
         # 创建布局
@@ -72,6 +74,9 @@ class SubtitleExtractorGUI:
         while True:
             # 循环读取事件
             event, values = self.window.read(timeout=10)
+            # 队列如果是空的,写入值数据
+            if self.queue.empty():
+                self.queue.put(values)
             # 处理【打开】事件
             self._file_event_handler(event, values)
             # 处理【滑动】事件
@@ -139,7 +144,8 @@ class SubtitleExtractorGUI:
              ],
             # cmd运行输入区域
             [sg.Text("扫描的目录或文件,支持多个用','分割:"), sg.Input(key="-SOURCE-PATH-", default_text=None)],
-            [sg.Text("一次执行(并发)的个数:"), sg.Spin([i for i in range(1, 11)], key="-ONCE-NUM-", initial_value=3)],
+            [sg.Text("一次执行(并发)的个数:"), sg.Spin([i for i in range(1, 11)], key="-ONCE-NUM-", initial_value=3), sg.Checkbox("当前批次执行完后直接结束", key="-IS-NOW-BATCH-END-")],
+
             [sg.Checkbox("是否自动关机", key="-IS-SHUTDOWN-")],
             # 运行cmd按钮
             [sg.Button(button_text="运行cmd提取", key='-RUN-CMD-', size=(20, 1))],
@@ -246,7 +252,8 @@ class SubtitleExtractorGUI:
                 self.window['-FILE_BTN-'].update(disabled=True)
                 self.window['-LANGUAGE-MODE-'].update(disabled=True)
                 import run
-                Thread(target=run.main, daemon=True, args=[source_path, values['-IS-SHUTDOWN-'], values['-ONCE-NUM-']]).start()
+                thread = Thread(target=run.main, daemon=True, args=[self.queue]).start()
+
     def _slide_event_handler(self, event, values):
         """
         当滑动视频进度条/滑动字幕选择区域滑块时：
