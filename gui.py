@@ -5,6 +5,7 @@
 @FileName: gui.py
 @desc: 字幕提取器图形化界面
 """
+import time
 import warnings
 warnings.filterwarnings("ignore", category=Warning)
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -233,7 +234,19 @@ class SubtitleExtractorGUI:
                 subtitle_area = (self.ymin, self.ymax, self.xmin, self.xmax)
                 from backend.main import SubtitleExtractor
                 self.se = SubtitleExtractor(self.video_path, subtitle_area)
-                Thread(target=self.se.run, daemon=True).start()
+                process = Thread(target=self.se.run, daemon=True)
+                process.start()
+                while True:
+                    time.sleep(20)
+                    if not process.is_alive():
+                        # 重新读取窗口值
+                        event, values = self.window.read(timeout=10)
+                        shutdown = values['-IS-SHUTDOWN-']
+                        # 自动关机
+                        if shutdown:
+                            print(f"60s after shutdown pc")
+                            os.system('shutdown -s -t 60')
+                        break
         # 运行cmd的提取
         if event == '-RUN-CMD-':
             source_path = values['-SOURCE-PATH-']
