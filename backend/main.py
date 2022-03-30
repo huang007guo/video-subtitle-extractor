@@ -29,7 +29,6 @@ import platform
 import uuid
 import shutil
 
-
 # 加载文本检测+识别模型
 class OcrRecogniser:
     def __init__(self):
@@ -84,7 +83,9 @@ class SubtitleExtractor:
         self.sub_detector = SubtitleDetect()
         # 临时存储文件夹
         uid = uuid.uuid1()
-        self.temp_output_dir = os.path.join(os.path.dirname(config.BASE_DIR), 'output'+uid.hex)
+        tempDir = 'output'+uid.hex
+        self.temp_output_dir = os.path.join(os.path.dirname(config.BASE_DIR), tempDir)
+        print(f'{vd_path}: {tempDir}')
         # 视频路径
         self.video_path = vd_path
         self.video_cap = cv2.VideoCapture(vd_path)
