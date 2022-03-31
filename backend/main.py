@@ -8,6 +8,7 @@
 import re
 import os
 import random
+import time
 from collections import Counter
 import unicodedata
 from threading import Thread
@@ -320,6 +321,7 @@ class SubtitleExtractor:
         def count_process():
             duration_ms = (self.frame_count / self.fps) * 1000
             while True:
+                time.sleep(10)
                 rgb_images_path = os.path.join(self.temp_output_dir, 'RGBImages')
                 if os.path.exists(rgb_images_path):
                     rgb_images = sorted(os.listdir(rgb_images_path))
