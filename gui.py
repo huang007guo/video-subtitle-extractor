@@ -66,6 +66,7 @@ class SubtitleExtractorGUI:
         # 字幕提取器
         self.se = None
         self.queue = Queue(maxsize=1)
+        self.process = None
 
     def run(self):
         # 创建布局
@@ -86,6 +87,15 @@ class SubtitleExtractorGUI:
             self._language_mode_event_handler(event)
             # 处理【运行】事件
             self._run_event_handler(event, values)
+            if self.process and not self.process.is_alive():
+                # 重新读取窗口值
+                event, values = self.window.read(timeout=10)
+                shutdown = values['-IS-SHUTDOWN-']
+                # 自动关机
+                if shutdown:
+                    print(f"60s after shutdown pc")
+                    os.system('shutdown -s -t 60')
+                break
             # 如果关闭软件，退出
             if event == sg.WIN_CLOSED:
                 break
@@ -234,19 +244,9 @@ class SubtitleExtractorGUI:
                 subtitle_area = (self.ymin, self.ymax, self.xmin, self.xmax)
                 from backend.main import SubtitleExtractor
                 self.se = SubtitleExtractor(self.video_path, subtitle_area)
-                process = Thread(target=self.se.run, daemon=True)
-                process.start()
-                while True:
-                    time.sleep(20)
-                    if not process.is_alive():
-                        # 重新读取窗口值
-                        event, values = self.window.read(timeout=10)
-                        shutdown = values['-IS-SHUTDOWN-']
-                        # 自动关机
-                        if shutdown:
-                            print(f"60s after shutdown pc")
-                            os.system('shutdown -s -t 60')
-                        break
+                self.process = Thread(target=self.se.run, daemon=True)
+                self.process.start()
+
         # 运行cmd的提取
         if event == '-RUN-CMD-':
             source_path = values['-SOURCE-PATH-']
@@ -265,7 +265,8 @@ class SubtitleExtractorGUI:
                 self.window['-FILE_BTN-'].update(disabled=True)
                 self.window['-LANGUAGE-MODE-'].update(disabled=True)
                 import run
-                thread = Thread(target=run.main, daemon=True, args=[self.queue]).start()
+                self.process = Thread(target=run.main, daemon=True, args=[self.queue])
+                self.process.start()
 
     def _slide_event_handler(self, event, values):
         """
