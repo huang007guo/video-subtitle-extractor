@@ -161,8 +161,8 @@ def main(queue):
         shutdown = values['-IS-SHUTDOWN-']
         # 自动关机
         if shutdown:
-            print(f"60s after shutdown pc")
-            os.system('shutdown -s -t 60')
+            print(f"120s after shutdown pc")
+            os.system('shutdown -s -t 120')
 
     return 0
 

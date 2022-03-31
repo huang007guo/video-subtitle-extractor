@@ -93,9 +93,8 @@ class SubtitleExtractorGUI:
                 shutdown = values['-IS-SHUTDOWN-']
                 # 自动关机
                 if shutdown:
-                    print(f"60s after shutdown pc")
-                    os.system('shutdown -s -t 60')
-                break
+                    print(f"120s after shutdown pc")
+                    os.system('shutdown -s -t 120')
             # 如果关闭软件，退出
             if event == sg.WIN_CLOSED:
                 break
