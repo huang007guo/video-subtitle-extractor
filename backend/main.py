@@ -117,6 +117,7 @@ class SubtitleExtractor:
         self.ocr = OcrRecogniser()
         # 处理进度
         self.progress = 0
+        self.is_end = False
 
     def run(self):
         """
@@ -177,9 +178,11 @@ class SubtitleExtractor:
         if config.REC_CHAR_TYPE in ('ch', 'EN', 'en', 'ch_tra'):
             reformat(os.path.join(os.path.splitext(self.video_path)[0] + '.srt'))
         print(interface_config['Main']['FinishGenerateSub'])
-        self.progress = 100
         # hank 删除临时目录
-        shutil.rmtree(self.temp_output_dir)
+        shutil.rmtree(self.temp_output_dir, ignore_errors=True)
+
+        self.progress = 100
+        self.is_end = True
 
     def extract_frame(self):
         """

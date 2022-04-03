@@ -82,7 +82,7 @@ def main(queue):
         concurrencyNum = len(allFile) if len(allFile) < onceNum else onceNum
         i = 0
         j = 0
-        nowProcessAll = []
+        nowSeAll = nowProcessAll = []
 
         # 字幕区域参数
         for nowFile in allFile:
@@ -114,29 +114,52 @@ def main(queue):
             nowProcess = Thread(target=se.run, daemon=True)
             # nowProcess = Thread(target=print, args=["thread"])
             nowProcess.start()
-            nowProcessAll.append(nowProcess)
+            # nowProcessAll.append(nowProcess)
+            nowSeAll.append(se)
             # 是否继续循环的判断条件
-            isWhile = len(nowProcessAll) >= concurrencyNum
+            isWhile = len(nowSeAll) >= concurrencyNum
             while isWhile:
                 time.sleep(10)
                 # 重新读取窗口值
                 values = getNewValue(queue)
                 onceNum = values['-ONCE-NUM-']
                 concurrencyNum = len(allFile) if len(allFile) < onceNum else onceNum
-                for process in nowProcessAll:
-                    if not process.is_alive():
-                        nowProcessAll.remove(process)
+                for nowSe in nowSeAll:
+                    if nowSe.is_end:
+                        nowSeAll.remove(nowSe)
                 isNowBatchEnd = values['-IS-NOW-BATCH-END-']
                 # 如果当前批次结束需要判断线程池是否为空
                 if isNowBatchEnd:
-                    if len(nowProcessAll) == 0:
+                    if len(nowSeAll) == 0:
                         break
                     else:
                         # 还有线程继续执行循环判断
                         isWhile = True
                         continue
                 else:
-                    isWhile = len(nowProcessAll) >= concurrencyNum
+                    isWhile = len(nowSeAll) >= concurrencyNum
+            # # 是否继续循环的判断条件
+            # isWhile = len(nowProcessAll) >= concurrencyNum
+            # while isWhile:
+            #     time.sleep(10)
+            #     # 重新读取窗口值
+            #     values = getNewValue(queue)
+            #     onceNum = values['-ONCE-NUM-']
+            #     concurrencyNum = len(allFile) if len(allFile) < onceNum else onceNum
+            #     for process in nowProcessAll:
+            #         if not process.is_alive():
+            #             nowProcessAll.remove(process)
+            #     isNowBatchEnd = values['-IS-NOW-BATCH-END-']
+            #     # 如果当前批次结束需要判断线程池是否为空
+            #     if isNowBatchEnd:
+            #         if len(nowProcessAll) == 0:
+            #             break
+            #         else:
+            #             # 还有线程继续执行循环判断
+            #             isWhile = True
+            #             continue
+            #     else:
+            #         isWhile = len(nowProcessAll) >= concurrencyNum
             if isNowBatchEnd:
                 break
 
