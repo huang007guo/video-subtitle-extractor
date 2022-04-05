@@ -175,6 +175,12 @@ def main(queue):
             #             print(e)
             #     print(f"----------------Ok----------------------")
             #     nowProcessAll = []
+        # 判断是否所有的都执行完成了
+        while len(nowSeAll) > 0:
+            time.sleep(10)
+            for nowSe in nowSeAll:
+                if nowSe.is_end:
+                    nowSeAll.remove(nowSe)
         print(f"all Ok")
     except BaseException as e:
         print(traceback.print_exc())
