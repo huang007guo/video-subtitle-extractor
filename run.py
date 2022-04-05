@@ -78,7 +78,8 @@ def main(queue):
                 # print("3:",file_name_list)  #当前主目录下的所有文件
                 file_name_lists = file_name_lists + [maindir + "\\" + x for x in file_name_list]
             allFile = [x for x in file_name_lists if
-                       filterFileFun(x, "wmv", "avi", "mpeg", "mpg", "rm", "rmvb", "flv", "mp4", "mkv")]
+                       filterFileFun(x, "wmv", "avi", "mpeg", "mpg", "flv", "mp4", "mkv")]
+                       # filterFileFun(x, "wmv", "avi", "mpeg", "mpg", "rm", "rmvb", "flv", "mp4", "mkv")]
         concurrencyNum = len(allFile) if len(allFile) < onceNum else onceNum
         i = 0
         j = 0
