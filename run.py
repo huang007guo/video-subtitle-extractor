@@ -53,8 +53,8 @@ def main(queue):
     parser = argparse.ArgumentParser()
     parser.add_argument('-xL', '--xLeft', help="字幕区域x轴左边相对视频的比例,默认.05", type=float, default=.05)
     parser.add_argument('-xW', '--xWidth', help="字幕区域x轴宽度相对视频的比例,默认.9", type=float, default=.9)
-    parser.add_argument('-yT', '--yTop', help="字幕区域y轴上边相对视频的比例,默认.83", type=float, default=.83)
-    parser.add_argument('-yH', '--yHeight', help="字幕区域y轴高度相对视频高度的比例,默认.17", type=float, default=.17)
+    parser.add_argument('-yT', '--yTop', help="字幕区域y轴上边相对视频的比例,默认.83", type=float, default=.80)
+    parser.add_argument('-yH', '--yHeight', help="字幕区域y轴高度相对视频高度的比例,默认.17", type=float, default=.20)
 
     # 读取窗口值
     values = getNewValue(queue)

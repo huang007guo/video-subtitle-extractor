@@ -196,8 +196,8 @@ class SubtitleExtractorGUI:
                     self.window['-Y-SLIDER-'].update(range=(0, self.frame_height), disabled=False)
                     self.window['-Y-SLIDER-H-'].update(range=(0, self.frame_height // 2), disabled=False)
                     # hank 默认的字幕位置Y轴
-                    self.window['-Y-SLIDER-'].update(self.frame_height * .83)
-                    self.window['-Y-SLIDER-H-'].update(self.frame_height * .17)
+                    self.window['-Y-SLIDER-'].update(self.frame_height * .80)
+                    self.window['-Y-SLIDER-H-'].update(self.frame_height * .20)
                     self.window['-X-SLIDER-'].update(range=(0, self.frame_width), disabled=False)
                     self.window['-X-SLIDER-W-'].update(range=(0, self.frame_width), disabled=False)
                     # hank 默认的字幕位置X轴
