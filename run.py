@@ -87,6 +87,9 @@ def main(queue):
 
         # 字幕区域参数
         for nowFile in allFile:
+            if os.path.exists(os.path.join(os.path.splitext(nowFile)[0] + '.srt')):
+                print(f"{nowFile} 已存在字幕")
+                continue
             video_cap = cv2.VideoCapture(nowFile)
             if video_cap is None:
                 print(f"{nowFile} 读取失败")
@@ -94,8 +97,9 @@ def main(queue):
             if not video_cap.isOpened():
                 print(f"{nowFile} 打开失败")
                 continue
-            if os.path.exists(os.path.join(os.path.splitext(nowFile)[0] + '.srt')):
-                print(f"{nowFile} 已存在字幕")
+            ret, frame = video_cap.read()
+            if not ret:
+                print(f"{nowFile} 读取失败")
                 continue
             print(f"now file:{nowFile}")
             # 获取视频的高度
