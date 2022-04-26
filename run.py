@@ -97,10 +97,10 @@ def main(queue):
             if not video_cap.isOpened():
                 print(f"{nowFile} 打开失败")
                 continue
-            ret, frame = video_cap.read()
-            if not ret:
-                print(f"{nowFile} 读取失败")
-                continue
+            # ret, frame = video_cap.read()
+            # if not ret:
+                # print(f"{nowFile} 读取失败")
+                # continue
             print(f"now file:{nowFile}")
             # 获取视频的高度
             frame_height = video_cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
@@ -108,13 +108,14 @@ def main(queue):
             frame_width = video_cap.get(cv2.CAP_PROP_FRAME_WIDTH)
 
             # 字幕区域x轴设置
-            xmin = frame_width * args.xLeft
-            xmax = xmin + frame_width * args.xWidth
+            xmin = int(frame_width * args.xLeft)
+            xmax = int(frame_width * args.xLeft + frame_width * args.xWidth)
 
             # 字幕区域y轴设置
-            ymin = frame_height * args.yTop
-            ymax = ymin + frame_height * args.yHeight
+            ymin = int(frame_height * args.yTop)
+            ymax = int(frame_height * args.yTop + frame_height * args.yHeight)
             subtitle_area = (ymin, ymax, xmin, xmax)
+            print(f"字幕区域：{subtitle_area}")
             se = SubtitleExtractor(nowFile, sub_area=subtitle_area)
             nowProcess = Thread(target=se.run, daemon=True)
             # nowProcess = Thread(target=print, args=["thread"])
